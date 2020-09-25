@@ -5,6 +5,8 @@ import Modal from '@material-ui/core/Modal';
 import { makeStyles } from '@material-ui/core/styles'
 import { auth, db } from './firebase'
 import { Button, Input } from '@material-ui/core';
+import ImageUpload from './ImageUpload'
+import InstagramEmbed from 'react-instagram-embed';
 
 function getModalStyle() {
   const top = 50;
@@ -59,8 +61,11 @@ function App() {
   }, [user, username])
 
   useEffect(() => {
-    db.collection('posts').onSnapshot(snapshot => {
-      setPosts(snapshot.docs.map(doc => doc.data())) // ! No func el destructuring d id y post
+    db.collection('posts').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+      setPosts(snapshot.docs.map(doc => ({
+        id: doc.id,
+        post: doc.data()
+      }))) // ! No func el destructuring d id y post
     })
   }, []);
 
@@ -75,10 +80,25 @@ function App() {
         })
       })
       .catch((error) => alert(error.message))
+
+    setOpen(false);
+  }
+
+  const signIn = (event) => {
+    event.preventDefault();
+
+    auth
+      .signInWithEmailAndPassword(email, password)
+      .catch((error) => alert(error.message))
+
+    // Closing the modal once you sign in
+    setOpenSignIn(false)
   }
 
   return (
     <div className="app">
+
+      {/* FIRST MODAL */}
       <Modal
         open={open}
         onClose={() => setOpen(false)}
@@ -91,64 +111,111 @@ function App() {
                 src="https://www.instagram.com/static/images/web/mobile_nav_type_logo.png/735145cfe0a4.png"
                 alt=""
               />
-
-              <Input
-                type="username"
-                placeholder="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-              <Input
-                type="text"
-                placeholder="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <Input
-                type="password"
-                placeholder="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-
-              <Button type="submit" onClick={signUp}>Sign Up</Button>
             </center>
+            <Input
+              type="username"
+              placeholder="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <Input
+              type="text"
+              placeholder="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <Input
+              type="password"
+              placeholder="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+
+            <Button type="submit" onClick={signUp}>Sign Up</Button>
           </form>
         </div>
       </Modal>
 
+      {/* SECOND MODAL */}
+      <Modal
+        // ! ?? open && and onClose?
+        open={openSignIn}
+        onClose={() => setOpenSignIn(false)}
+      >
+        <div style={modalStyle} className={classes.paper}>
+          <form className="app__signup">
+            <center>
+              <img
+                className="app__headerImage"
+                src="https://www.instagram.com/static/images/web/mobile_nav_type_logo.png/735145cfe0a4.png"
+                alt=""
+              />
+            </center>
+            <Input
+              type="text"
+              placeholder="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <Input
+              type="password"
+              placeholder="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <Button type="submit" onClick={signIn}>Sign In</Button>
+          </form>
+
+        </div>
+
+      </Modal>
 
       <div className="app__header">
         <img
           src="https://www.instagram.com/static/images/web/mobile_nav_type_logo.png/735145cfe0a4.png"
           alt=""
         />
+
+        {user ? (
+          <Button onClick={() => auth.signOut()}>Logout</Button>
+        ) : (
+            <div className="app__loginContainer">
+              <Button onClick={() => setOpenSignIn(true)}>Sign In</Button>
+              <Button onClick={() => setOpen(true)}>Sign Up</Button>
+            </div>
+          )}
       </div>
 
-      {user ? (
-        <Button onClick={() => auth.signOut()}>Logout</Button>
+      <div className="app__posts">
+        <div className="app__postsLeft">
+          {
+            posts.map(({ id, post }) => (
+              <Post key={post.id} postId={id} user={user} username={post.username} caption={post.caption} imageUrl={post.imageUrl} />
+            ))
+          }
+        </div>
+        <div className="app__postsRight">
+          <InstagramEmbed
+            url='https://www.instagr.am/p/Zw9o4'
+            // url='https://www.instagram.com/p/CEjoNZrhp0jFvaZaG51DN4HfPLfXhToj8RKy3A0/'
+            maxWidth={320}
+            hideCaption={false}
+            containerTagName='div'
+            protocol=''
+            injectScript
+            onLoading={() => { }}
+            onSuccess={() => { }}
+            onAfterRender={() => { }}
+            onFailure={() => { }}
+          />
+        </div>
+      </div>
+
+      {user?.displayName ? (
+        <ImageUpload username={user.displayName} />
       ) : (
-          <div className="app__loginContainer">
-            <Button onClick={() => (true)}>Sign Up</Button>
-            <Button onClick={() => setOpen(true)}>Sign Up</Button>
-          </div>
+          <h3 className="app__sorrymessage">Sorry you need to login to upload images</h3>
         )}
-
-      <h1>Hello clever Programmers!</h1>
-
-      {
-        posts.map(post => (
-          <Post key={post.id} username={post.username} caption={post.caption} imageUrl={post.imageUrl}>
-
-          </Post>
-        ))
-      }
-
-      {/* <Post username="cleverqazi" caption="WOW it works!" imageUrl="https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=1.00xw:0.669xh;0,0.190xh&resize=1200:*" />
-      <Post username="alfonso" caption="DOPE!" imageUrl="https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=1.00xw:0.669xh;0,0.190xh&resize=1200:*" />
-      <Post username="hey" caption="so cool" imageUrl="https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=1.00xw:0.669xh;0,0.190xh&resize=1200:*" /> */}
-      {/* Posts */}
-
     </div >
   );
 }
