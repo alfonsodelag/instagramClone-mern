@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import Pusher from 'pusher-js'
 import Post from './Post'
 import './App.css';
 import Modal from '@material-ui/core/Modal';
 import { makeStyles } from '@material-ui/core/styles'
 import { auth, db } from './firebase'
 import { Button, Input } from '@material-ui/core';
+import FlipMove from 'react-flip-move'
 import ImageUpload from './ImageUpload'
 import InstagramEmbed from 'react-instagram-embed';
+import axios from './axios';
 
 function getModalStyle() {
   const top = 50;
@@ -42,6 +45,7 @@ function App() {
   const [email, setEmail] = useState('')
   const [user, setUser] = useState(null)
 
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((authUser) => {
       if (authUser) {
@@ -53,21 +57,40 @@ function App() {
         setUser(null)
       }
     })
-
     return () => {
       // perform some cleanup actions
       unsubscribe();
     }
-  }, [user, username])
+  }, [user, username]);
+
+  const fetchPosts = async () =>
+
+    await axios.get('http://localhost:8080/sync').then((response) => {
+      console.log('response from useEffect', response);
+      setPosts(response.data)
+    })
 
   useEffect(() => {
-    db.collection('posts').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
-      setPosts(snapshot.docs.map(doc => ({
-        id: doc.id,
-        post: doc.data()
-      }))) // ! No func el destructuring d id y post
-    })
+    const pusher = new Pusher('bc4934205742729be45a', {
+      cluster: 'eu'
+    });
+
+    const channel = pusher.subscribe('posts');
+    channel.bind('inserted', function (data) {
+      console.log('data received: ', data)
+      fetchPosts();
+    });
+  }, [])
+
+
+  useEffect(() => {
+    fetchPosts();
   }, []);
+
+
+  posts.forEach(post => {
+    console.log(".forEach posts >>>", post);
+  })
 
   const signUp = (event) => {
     event.preventDefault();
@@ -180,7 +203,7 @@ function App() {
           <Button onClick={() => auth.signOut()}>Logout</Button>
         ) : (
             <div className="app__loginContainer">
-              <Button onClick={() => setOpenSignIn(true)}>Sign In</Button>
+              <Button onClick={() => setOpenSignIn(true)}>Login</Button>
               <Button onClick={() => setOpen(true)}>Sign Up</Button>
             </div>
           )}
@@ -188,11 +211,18 @@ function App() {
 
       <div className="app__posts">
         <div className="app__postsLeft">
-          {
-            posts.map(({ id, post }) => (
-              <Post key={post.id} postId={id} user={user} username={post.username} caption={post.caption} imageUrl={post.imageUrl} />
-            ))
-          }
+          <FlipMove>
+            {posts.map((post) => (
+              <Post
+                user={user}
+                key={post._id}
+                postId={post._id}
+                username={post.user}
+                caption={post.caption}
+                imageUrl={post.image}
+              />
+            ))}
+          </FlipMove>
         </div>
         <div className="app__postsRight">
           <InstagramEmbed
