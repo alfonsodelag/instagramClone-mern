@@ -42,7 +42,7 @@ function ImageUpload({ username }) {
                     .then((url) => {
                         setUrl(url);
 
-                        axios.post('http://localhost:8080/upload', {
+                        axios.post('https://localhost:8080/upload', {
                             caption: caption,
                             user: username,
                             image: url,

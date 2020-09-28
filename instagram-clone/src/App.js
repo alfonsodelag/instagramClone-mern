@@ -65,7 +65,7 @@ function App() {
 
   const fetchPosts = async () =>
 
-    await axios.get('http://localhost:8080/sync').then((response) => {
+    await axios.get('https://localhost:8080/sync').then((response) => {
       console.log('response from useEffect', response);
       setPosts(response.data)
     })
