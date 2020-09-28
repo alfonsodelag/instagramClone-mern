@@ -29,7 +29,7 @@ function ImageUpload({ username }) {
             },
             (error) => {
                 // Error function....
-                console.log(error);
+                //console.log(error);
                 alert(error.message)
             },
             () => {
@@ -42,7 +42,7 @@ function ImageUpload({ username }) {
                     .then((url) => {
                         setUrl(url);
 
-                        axios.post('https://localhost:8080/upload', {
+                        axios.post('https://alfonso-insta-backend.herokuapp.com/upload', {
                             caption: caption,
                             user: username,
                             image: url,

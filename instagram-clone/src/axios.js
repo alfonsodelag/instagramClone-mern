@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-    baseUrl: 'http://localhost:8080'
+    baseUrl: 'https://alfonso-insta-backend.herokuapp.com/'
 })
 
 export default instance;

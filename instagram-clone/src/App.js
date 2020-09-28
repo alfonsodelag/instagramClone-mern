@@ -45,13 +45,11 @@ function App() {
   const [email, setEmail] = useState('')
   const [user, setUser] = useState(null)
 
-
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((authUser) => {
       if (authUser) {
-        console.log(authUser)
+        console.log("authUser: ", authUser)
         setUser(authUser)
-
       } else {
         // user has logged out
         setUser(null)
@@ -65,8 +63,7 @@ function App() {
 
   const fetchPosts = async () =>
 
-    await axios.get('https://localhost:8080/sync').then((response) => {
-      console.log('response from useEffect', response);
+    await axios.get('https://alfonso-insta-backend.herokuapp.com/sync').then((response) => {
       setPosts(response.data)
     })
 
@@ -77,7 +74,7 @@ function App() {
 
     const channel = pusher.subscribe('posts');
     channel.bind('inserted', function (data) {
-      console.log('data received: ', data)
+      //console.log('data received: ', data)
       fetchPosts();
     });
   }, [])
@@ -89,7 +86,7 @@ function App() {
 
 
   posts.forEach(post => {
-    console.log(".forEach posts >>>", post);
+    //console.log(".forEach posts >>>", post);
   })
 
   const signUp = (event) => {
@@ -98,6 +95,11 @@ function App() {
     auth
       .createUserWithEmailAndPassword(email, password)
       .then((authUser) => {
+
+        auth
+          .signInWithEmailAndPassword(email, password)
+          .catch((error) => alert(error.message))
+
         return authUser.user.updateProfile({
           displayName: username
         })
@@ -227,7 +229,6 @@ function App() {
         <div className="app__postsRight">
           <InstagramEmbed
             url='https://www.instagr.am/p/Zw9o4'
-            // url='https://www.instagram.com/p/CEjoNZrhp0jFvaZaG51DN4HfPLfXhToj8RKy3A0/'
             maxWidth={320}
             hideCaption={false}
             containerTagName='div'
@@ -241,7 +242,7 @@ function App() {
         </div>
       </div>
 
-      {user?.displayName ? (
+      {user ? (
         <ImageUpload username={user.displayName} />
       ) : (
           <h3 className="app__sorrymessage">Sorry you need to login to upload images</h3>

@@ -30,16 +30,16 @@ mongoose.connect(connection_url, {
 
 // Once the mongo connection is open, we will fire the function
 mongoose.connection.once('open', () => {
-    console.log('DB Connected')
+    //console.log('DB Connected')
     const changeStream = mongoose.connection.collection('posts').watch()
 
     changeStream.on('change', (change) => {
-        console.log('Change triggered on Pusher')
-        console.log(change)
-        console.log('End of change')
+        //console.log('Change triggered on Pusher')
+        //console.log(change)
+        //console.log('End of change')
 
         if (change.operationType === 'insert') {
-            console.log('Triggering Pusher  ***IMG UPLOAD***')
+            //console.log('Triggering Pusher  ***IMG UPLOAD***')
 
             const postDetails = change.fullDocument;
             pusher.trigger('posts', 'inserted', {
@@ -48,7 +48,7 @@ mongoose.connection.once('open', () => {
                 image: postDetails.image
             })
         } else {
-            console.log('Unknown trigger from Pusher')
+            //console.log('Unknown trigger from Pusher')
         }
     })
 
@@ -56,7 +56,7 @@ mongoose.connection.once('open', () => {
 
 // Api routes
 app.post('/upload', (req, res) => {
-    console.log("req", req);
+    //console.log("req", req);
     // getting data from db as an object
     const body = req.body;
 
@@ -82,4 +82,4 @@ app.get('/sync', (req, res) => {
 
 app.get('/', (req, res) => res.status(200).send('Hello world 123'))
 // Listen
-app.listen(port, () => console.log(`listening on localhost: ${port}`))
+app.listen(port, () => //console.log(`listening on localhost: ${port}`))
